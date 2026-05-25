@@ -1,8 +1,9 @@
 # 用 AWS Console 設定 EVS DNS
 
-兩條路:
-- **A. CloudShell 一鍵跑指令**(最快,~30 秒) — 看下面 §0
-- **B. Route 53 UI 一筆一筆建** — §1 開始
+三條路:
+- **A. CloudShell 一鍵跑指令**(最快,~30 秒) — §0
+- **B. CloudShell 每筆 record 獨立指令**(可以只跑單筆) — §0B
+- **C. Route 53 UI 一筆一筆建** — §1 開始
 
 > 前置(兩條路都要):記下 EVS 用的 **VPC ID** 和 **Region**。
 > 在 VPC console (`https://console.aws.amazon.com/vpc/`) → Your VPCs 找到 EVS 那一個,把 `vpc-xxxxxxxx` 抄起來。
@@ -112,6 +113,236 @@ echo "Done. FWD=$FWD_ID  RV1=$RV1_ID  RV2=$RV2_ID"
 跑完到 Route 53 → Hosted zones 應該看到 3 個新的 PHZ,每個都有對應筆數的記錄。
 
 > CloudShell 環境每個 region 有 1GB 持久空間,但暫存檔放 `/tmp` 重開就沒了,沒關係,記錄已經寫進 Route 53。
+
+---
+
+## §0B — CloudShell 每筆 record 獨立指令
+
+跟 §0 一樣是貼進 CloudShell,差別是 **每筆 DNS record 都是獨立一行 `aws` 指令**。
+適合想單獨重跑某一筆(例如某台 IP 改了)或想看清楚每筆在做什麼的情境。
+
+> 完整檔案在 repo 的 [`cloudshell-per-record.sh`](cloudshell-per-record.sh),CloudShell 裡也可以直接:
+> ```bash
+> git clone https://github.com/kostenyang/awsevs.git && cd awsevs && less cloudshell-per-record.sh
+> ```
+
+### Step A — 設環境變數(必跑)
+
+```bash
+export VPC_ID=vpc-xxxxxxxx              # ← 改成 EVS 的 VPC ID
+export AWS_REGION=$AWS_DEFAULT_REGION   # CloudShell 自帶,等於當前 region
+```
+
+### Step B — 建 3 個 Private Hosted Zone(必跑,只跑一次)
+
+```bash
+# Forward zone: evs.vs.local
+FWD_ID=$(aws route53 create-hosted-zone \
+  --name evs.vs.local \
+  --caller-reference "evs-fwd-$(date +%s)" \
+  --hosted-zone-config Comment="EVS forward",PrivateZone=true \
+  --vpc VPCRegion=$AWS_REGION,VPCId=$VPC_ID \
+  --query 'HostedZone.Id' --output text); FWD_ID=${FWD_ID##*/}
+echo "FWD_ID=$FWD_ID"
+```
+
+```bash
+# Reverse zone: 100.66.0.0/24
+RV1_ID=$(aws route53 create-hosted-zone \
+  --name 0.66.100.in-addr.arpa \
+  --caller-reference "evs-rv1-$(date +%s)" \
+  --hosted-zone-config Comment="EVS reverse 100.66.0/24",PrivateZone=true \
+  --vpc VPCRegion=$AWS_REGION,VPCId=$VPC_ID \
+  --query 'HostedZone.Id' --output text); RV1_ID=${RV1_ID##*/}
+echo "RV1_ID=$RV1_ID"
+```
+
+```bash
+# Reverse zone: 100.66.80.0/24
+RV2_ID=$(aws route53 create-hosted-zone \
+  --name 80.66.100.in-addr.arpa \
+  --caller-reference "evs-rv2-$(date +%s)" \
+  --hosted-zone-config Comment="EVS reverse 100.66.80/24",PrivateZone=true \
+  --vpc VPCRegion=$AWS_REGION,VPCId=$VPC_ID \
+  --query 'HostedZone.Id' --output text); RV2_ID=${RV2_ID##*/}
+echo "RV2_ID=$RV2_ID"
+```
+
+> 已經建過 zone、CloudShell session 斷了想重跑後面 record 指令?從 Console 抓回 ID:
+> ```bash
+> FWD_ID=$(aws route53 list-hosted-zones --query "HostedZones[?Name=='evs.vs.local.'].Id|[0]" --output text); FWD_ID=${FWD_ID##*/}
+> RV1_ID=$(aws route53 list-hosted-zones --query "HostedZones[?Name=='0.66.100.in-addr.arpa.'].Id|[0]" --output text); RV1_ID=${RV1_ID##*/}
+> RV2_ID=$(aws route53 list-hosted-zones --query "HostedZones[?Name=='80.66.100.in-addr.arpa.'].Id|[0]" --output text); RV2_ID=${RV2_ID##*/}
+> ```
+
+### Step C — Forward A records(13 筆,每筆一條獨立指令)
+
+```bash
+# tko-100005  →  100.66.0.5
+aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100005.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.0.5"}]}}]}'
+```
+
+```bash
+# tko-100006  →  100.66.0.6
+aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100006.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.0.6"}]}}]}'
+```
+
+```bash
+# tko-100007  →  100.66.0.7
+aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100007.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.0.7"}]}}]}'
+```
+
+```bash
+# tko-100008  →  100.66.0.8
+aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100008.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.0.8"}]}}]}'
+```
+
+```bash
+# tko-100085-vc  →  100.66.80.85   (vCenter)
+aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100085-vc.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.80.85"}]}}]}'
+```
+
+```bash
+# tko-100086-nsxt  →  100.66.80.86   (NSX-T)
+aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100086-nsxt.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.80.86"}]}}]}'
+```
+
+```bash
+# tko-100087-sddcm  →  100.66.80.87   (SDDC Manager)
+aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100087-sddcm.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.80.87"}]}}]}'
+```
+
+```bash
+# tko-100088-cb  →  100.66.80.88   (Cloud Builder)
+aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100088-cb.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.80.88"}]}}]}'
+```
+
+```bash
+# tko-100089-edge  →  100.66.80.89   (NSX Edge)
+aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100089-edge.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.80.89"}]}}]}'
+```
+
+```bash
+# tko-100090-edge  →  100.66.80.90   (NSX Edge)
+aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100090-edge.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.80.90"}]}}]}'
+```
+
+```bash
+# tko-100091-nsx  →  100.66.80.91   (NSX Manager)
+aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100091-nsx.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.80.91"}]}}]}'
+```
+
+```bash
+# tko-100092-nsx  →  100.66.80.92   (NSX Manager)
+aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100092-nsx.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.80.92"}]}}]}'
+```
+
+```bash
+# tko-100093-nsx  →  100.66.80.93   (NSX Manager)
+aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100093-nsx.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.80.93"}]}}]}'
+```
+
+### Step D — Reverse PTR records (100.66.0.0/24)
+
+```bash
+# 100.66.0.5  →  tko-100005.evs.vs.local
+aws route53 change-resource-record-sets --hosted-zone-id "$RV1_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"5.0.66.100.in-addr.arpa.","Type":"PTR","TTL":300,"ResourceRecords":[{"Value":"tko-100005.evs.vs.local."}]}}]}'
+```
+
+```bash
+# 100.66.0.6  →  tko-100006.evs.vs.local
+aws route53 change-resource-record-sets --hosted-zone-id "$RV1_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"6.0.66.100.in-addr.arpa.","Type":"PTR","TTL":300,"ResourceRecords":[{"Value":"tko-100006.evs.vs.local."}]}}]}'
+```
+
+```bash
+# 100.66.0.7  →  tko-100007.evs.vs.local
+aws route53 change-resource-record-sets --hosted-zone-id "$RV1_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"7.0.66.100.in-addr.arpa.","Type":"PTR","TTL":300,"ResourceRecords":[{"Value":"tko-100007.evs.vs.local."}]}}]}'
+```
+
+```bash
+# 100.66.0.8  →  tko-100008.evs.vs.local
+aws route53 change-resource-record-sets --hosted-zone-id "$RV1_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"8.0.66.100.in-addr.arpa.","Type":"PTR","TTL":300,"ResourceRecords":[{"Value":"tko-100008.evs.vs.local."}]}}]}'
+```
+
+### Step E — Reverse PTR records (100.66.80.0/24)
+
+```bash
+# 100.66.80.85  →  tko-100085-vc.evs.vs.local
+aws route53 change-resource-record-sets --hosted-zone-id "$RV2_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"85.80.66.100.in-addr.arpa.","Type":"PTR","TTL":300,"ResourceRecords":[{"Value":"tko-100085-vc.evs.vs.local."}]}}]}'
+```
+
+```bash
+# 100.66.80.86  →  tko-100086-nsxt.evs.vs.local
+aws route53 change-resource-record-sets --hosted-zone-id "$RV2_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"86.80.66.100.in-addr.arpa.","Type":"PTR","TTL":300,"ResourceRecords":[{"Value":"tko-100086-nsxt.evs.vs.local."}]}}]}'
+```
+
+```bash
+# 100.66.80.87  →  tko-100087-sddcm.evs.vs.local
+aws route53 change-resource-record-sets --hosted-zone-id "$RV2_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"87.80.66.100.in-addr.arpa.","Type":"PTR","TTL":300,"ResourceRecords":[{"Value":"tko-100087-sddcm.evs.vs.local."}]}}]}'
+```
+
+```bash
+# 100.66.80.88  →  tko-100088-cb.evs.vs.local
+aws route53 change-resource-record-sets --hosted-zone-id "$RV2_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"88.80.66.100.in-addr.arpa.","Type":"PTR","TTL":300,"ResourceRecords":[{"Value":"tko-100088-cb.evs.vs.local."}]}}]}'
+```
+
+```bash
+# 100.66.80.89  →  tko-100089-edge.evs.vs.local
+aws route53 change-resource-record-sets --hosted-zone-id "$RV2_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"89.80.66.100.in-addr.arpa.","Type":"PTR","TTL":300,"ResourceRecords":[{"Value":"tko-100089-edge.evs.vs.local."}]}}]}'
+```
+
+```bash
+# 100.66.80.90  →  tko-100090-edge.evs.vs.local
+aws route53 change-resource-record-sets --hosted-zone-id "$RV2_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"90.80.66.100.in-addr.arpa.","Type":"PTR","TTL":300,"ResourceRecords":[{"Value":"tko-100090-edge.evs.vs.local."}]}}]}'
+```
+
+```bash
+# 100.66.80.91  →  tko-100091-nsx.evs.vs.local
+aws route53 change-resource-record-sets --hosted-zone-id "$RV2_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"91.80.66.100.in-addr.arpa.","Type":"PTR","TTL":300,"ResourceRecords":[{"Value":"tko-100091-nsx.evs.vs.local."}]}}]}'
+```
+
+```bash
+# 100.66.80.92  →  tko-100092-nsx.evs.vs.local
+aws route53 change-resource-record-sets --hosted-zone-id "$RV2_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"92.80.66.100.in-addr.arpa.","Type":"PTR","TTL":300,"ResourceRecords":[{"Value":"tko-100092-nsx.evs.vs.local."}]}}]}'
+```
+
+```bash
+# 100.66.80.93  →  tko-100093-nsx.evs.vs.local
+aws route53 change-resource-record-sets --hosted-zone-id "$RV2_ID" --change-batch \
+'{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"93.80.66.100.in-addr.arpa.","Type":"PTR","TTL":300,"ResourceRecords":[{"Value":"tko-100093-nsx.evs.vs.local."}]}}]}'
+```
+
+### Step F — 驗證(從 EVS VPC 內任何一台 host 跑)
+
+```bash
+dig +short tko-100085-vc.evs.vs.local       # 預期: 100.66.80.85
+dig +short -x 100.66.80.85                  # 預期: tko-100085-vc.evs.vs.local.
+```
 
 ---
 

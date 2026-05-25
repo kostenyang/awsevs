@@ -29,20 +29,16 @@ delivered as Route 53 **Private Hosted Zones** attached to the EVS VPC.
 | tko-100092-nsx.evs.vs.local | 100.66.80.92 | NSX Manager |
 | tko-100093-nsx.evs.vs.local | 100.66.80.93 | NSX Manager |
 
-## Apply via AWS CloudShell (one command per record)
+## How to apply
 
-If you'd rather paste one independent command per DNS record (so you can run
-just a single host or selectively re-apply), use
-[cloudshell-per-record.sh](cloudshell-per-record.sh). It's organized into:
+Three ways, pick whichever fits:
 
-- §0 env vars (`VPC_ID`, `AWS_REGION`)
-- §1 three `create-hosted-zone` calls (forward + 2 reverse PHZs)
-- §2 thirteen independent A-record `change-resource-record-sets` calls
-- §3 thirteen independent PTR-record calls
-- §4 `dig` verification snippets
-
-Open AWS Console → switch to the EVS region → click the `>_` (CloudShell) icon
-→ paste section by section, or paste the whole file at once.
+| Method | File | When to use |
+|---|---|---|
+| AWS CloudShell, batched | [CONSOLE.md §0](CONSOLE.md#§0--aws-cloudshell-一鍵跑) | Fast one-shot, paste a single block |
+| AWS CloudShell, one command per record | [CONSOLE.md §0B](CONSOLE.md#§0b--cloudshell-每筆-record-獨立指令) + [cloudshell-per-record.sh](cloudshell-per-record.sh) | Want to re-apply a single host, or read each line |
+| Route 53 Web UI | [CONSOLE.md §1](CONSOLE.md#§1--route-53-ui-一筆一筆建) | No CLI at all, prefer clicking through |
+| Local awscli script | [setup-evs-dns.sh](setup-evs-dns.sh) (see below) | Have awscli on your laptop |
 
 ## Apply via local awscli (batched)
 
