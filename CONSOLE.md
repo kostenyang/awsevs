@@ -22,7 +22,7 @@
 
 ```bash
 # 1) 設好 EVS VPC ID(改成你自己的)
-export VPC_ID=vpc-xxxxxxxx
+export VPC_ID=vpc-08464602dd04513f0
 export AWS_REGION=$AWS_DEFAULT_REGION   # CloudShell 自帶,等於你 Console 當前 region
 
 # 2) 抓腳本下來跑(repo 推上去之後才能這樣抓)
@@ -34,7 +34,7 @@ cd awsevs
 **或者完全不 clone,直接把整段 inline 在 CloudShell 跑**:
 
 ```bash
-export VPC_ID=vpc-xxxxxxxx
+export VPC_ID=vpc-08464602dd04513f0
 export AWS_REGION=$AWS_DEFAULT_REGION
 
 # 建 forward zone
@@ -130,7 +130,7 @@ echo "Done. FWD=$FWD_ID  RV1=$RV1_ID  RV2=$RV2_ID"
 ### Step A — 設環境變數(必跑)
 
 ```bash
-export VPC_ID=vpc-xxxxxxxx              # ← 改成 EVS 的 VPC ID
+export VPC_ID=vpc-08464602dd04513f0              # EVS lab VPC
 export AWS_REGION=$AWS_DEFAULT_REGION   # CloudShell 自帶,等於當前 region
 ```
 
@@ -370,7 +370,7 @@ PHZ 預設只給 **附加到 PHZ 的 VPC 自己的 resolver** 用。EVS applianc
 ### Step A — 設環境變數(必跑)
 
 ```bash
-export VPC_ID=vpc-xxxxxxxx              # ← 改成 EVS 的 VPC ID
+export VPC_ID=vpc-08464602dd04513f0
 export AWS_REGION=$AWS_DEFAULT_REGION
 ```
 
@@ -457,13 +457,17 @@ echo "DOS_ID=$DOS_ID"
 
 CloudShell 開好後,**一個 code block = 一條指令**,依序貼:
 
-> Resolver Inbound IP 已知 — `100.66.146.33` / `100.66.175.116`,domain `evs.local`,NTP `169.254.169.123`。
-> 只要設好 `VPC_ID` 後面就可以照貼。
+> 本 lab 已知值:
+> - VPC ID: `vpc-08464602dd04513f0`
+> - Resolver Inbound IP: `100.66.146.33` / `100.66.175.116`
+> - domain: `evs.local`,NTP: `169.254.169.123`
+>
+> 下面所有值都已經寫死,**完全照貼即可**。
 
 #### 1. 設 EVS VPC ID
 
 ```bash
-export VPC_ID=vpc-xxxxxxxx
+export VPC_ID=vpc-08464602dd04513f0
 ```
 
 #### 2. 建 DHCP Option Set(把 4 個值塞進去)

@@ -11,7 +11,7 @@
 # ======================================================================
 
 # §0 ── 設定環境變數(必跑)────────────────────────────────────────────
-export VPC_ID=vpc-xxxxxxxx                 # ← 改成 EVS 的 VPC ID
+export VPC_ID=vpc-08464602dd04513f0        # EVS lab VPC
 export AWS_REGION=$AWS_DEFAULT_REGION      # CloudShell 自帶
 
 

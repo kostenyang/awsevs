@@ -6,11 +6,11 @@
 #   2) associate 到 EVS VPC
 #
 # 用法:
-#   export VPC_ID=vpc-xxxxxxxx
-#   ./cloudshell-dhcp-quick.sh
+#   ./cloudshell-dhcp-quick.sh                     # 用內建的 EVS lab VPC
+#   VPC_ID=vpc-xxx ./cloudshell-dhcp-quick.sh      # 蓋過用其他 VPC
 set -euo pipefail
 
-: "${VPC_ID:?set VPC_ID (the EVS VPC id)}"
+VPC_ID="${VPC_ID:-vpc-08464602dd04513f0}"
 
 # === 已知值 — 你 lab 的 Route 53 Resolver Inbound Endpoint IP =========
 DNS_IP1=100.66.146.33
