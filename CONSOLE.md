@@ -207,79 +207,79 @@ echo "RV2_ID=$RV2_ID"
 
 ```bash
 # tko-100005  →  100.66.0.5
-aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+aws route53 change-resource-record-sets --hosted-zone-id "Z056691012KJA8U1Y5UAU" --change-batch \
 '{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100005.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.0.5"}]}}]}'
 ```
 
 ```bash
 # tko-100006  →  100.66.0.6
-aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+aws route53 change-resource-record-sets --hosted-zone-id "Z056691012KJA8U1Y5UAU" --change-batch \
 '{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100006.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.0.6"}]}}]}'
 ```
 
 ```bash
 # tko-100007  →  100.66.0.7
-aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+aws route53 change-resource-record-sets --hosted-zone-id "Z056691012KJA8U1Y5UAU" --change-batch \
 '{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100007.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.0.7"}]}}]}'
 ```
 
 ```bash
 # tko-100008  →  100.66.0.8
-aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+aws route53 change-resource-record-sets --hosted-zone-id "Z056691012KJA8U1Y5UAU" --change-batch \
 '{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100008.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.0.8"}]}}]}'
 ```
 
 ```bash
 # tko-100085-vc  →  100.66.80.85   (vCenter)
-aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+aws route53 change-resource-record-sets --hosted-zone-id "Z056691012KJA8U1Y5UAU" --change-batch \
 '{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100085-vc.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.80.85"}]}}]}'
 ```
 
 ```bash
 # tko-100086-nsxt  →  100.66.80.86   (NSX-T)
-aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+aws route53 change-resource-record-sets --hosted-zone-id "Z056691012KJA8U1Y5UAU" --change-batch \
 '{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100086-nsxt.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.80.86"}]}}]}'
 ```
 
 ```bash
 # tko-100087-sddcm  →  100.66.80.87   (SDDC Manager)
-aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+aws route53 change-resource-record-sets --hosted-zone-id "Z056691012KJA8U1Y5UAU" --change-batch \
 '{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100087-sddcm.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.80.87"}]}}]}'
 ```
 
 ```bash
 # tko-100088-cb  →  100.66.80.88   (Cloud Builder)
-aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+aws route53 change-resource-record-sets --hosted-zone-id "Z056691012KJA8U1Y5UAU" --change-batch \
 '{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100088-cb.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.80.88"}]}}]}'
 ```
 
 ```bash
 # tko-100089-edge  →  100.66.80.89   (NSX Edge)
-aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+aws route53 change-resource-record-sets --hosted-zone-id "Z056691012KJA8U1Y5UAU" --change-batch \
 '{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100089-edge.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.80.89"}]}}]}'
 ```
 
 ```bash
 # tko-100090-edge  →  100.66.80.90   (NSX Edge)
-aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+aws route53 change-resource-record-sets --hosted-zone-id "Z056691012KJA8U1Y5UAU" --change-batch \
 '{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100090-edge.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.80.90"}]}}]}'
 ```
 
 ```bash
 # tko-100091-nsx  →  100.66.80.91   (NSX Manager)
-aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+aws route53 change-resource-record-sets --hosted-zone-id "Z056691012KJA8U1Y5UAU" --change-batch \
 '{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100091-nsx.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.80.91"}]}}]}'
 ```
 
 ```bash
 # tko-100092-nsx  →  100.66.80.92   (NSX Manager)
-aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+aws route53 change-resource-record-sets --hosted-zone-id "Z056691012KJA8U1Y5UAU" --change-batch \
 '{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100092-nsx.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.80.92"}]}}]}'
 ```
 
 ```bash
 # tko-100093-nsx  →  100.66.80.93   (NSX Manager)
-aws route53 change-resource-record-sets --hosted-zone-id "$FWD_ID" --change-batch \
+aws route53 change-resource-record-sets --hosted-zone-id "Z056691012KJA8U1Y5UAU" --change-batch \
 '{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"tko-100093-nsx.evs.vs.local.","Type":"A","TTL":300,"ResourceRecords":[{"Value":"100.66.80.93"}]}}]}'
 ```
 
