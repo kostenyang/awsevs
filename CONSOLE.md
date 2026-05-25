@@ -173,7 +173,7 @@ echo "RV2_ID=$RV2_ID"
 
 > 本 lab 已知值(可直接 `export`,省得查):
 > ```bash
-> export FWD_ID=Z056691012KJA8UY5UAU      # evs.vs.local
+> export FWD_ID=Z056691012KJA8U1Y5UAU      # evs.vs.local
 > # export RV1_ID=Z...                    # 0.66.100.in-addr.arpa  (建好後填)
 > # export RV2_ID=Z...                    # 80.66.100.in-addr.arpa (建好後填)
 > ```
