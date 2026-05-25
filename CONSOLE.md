@@ -171,6 +171,15 @@ echo "RV2_ID=$RV2_ID"
 
 ### Step B' — 找不到 `FWD_ID` / `RV1_ID` / `RV2_ID`(CloudShell 斷線重來)
 
+> 本 lab 已知值(可直接 `export`,省得查):
+> ```bash
+> export FWD_ID=Z056691012KJA8UY5UAU      # evs.vs.local
+> # export RV1_ID=Z...                    # 0.66.100.in-addr.arpa  (建好後填)
+> # export RV2_ID=Z...                    # 80.66.100.in-addr.arpa (建好後填)
+> ```
+>
+> 如果上面 RV1/RV2 留空,或想自己重新查 — 用下面 3 條動態抓:
+
 Zone 已經建過了,但變數沒了 — 一條條貼,把三個 ID 救回來:
 
 ```bash
