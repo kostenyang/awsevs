@@ -1,0 +1,13 @@
+100.66.0.5     tko-100005.evs.vs.local
+100.66.0.6     tko-100006.evs.vs.local
+100.66.0.7     tko-100007.evs.vs.local
+100.66.0.8     tko-100008.evs.vs.local
+100.66.80.85   tko-100085-vc.evs.vs.local
+100.66.80.86   tko-100086-nsxt.evs.vs.local
+100.66.80.87   tko-100087-sddcm.evs.vs.local
+100.66.80.88   tko-100088-cb.evs.vs.local
+100.66.80.89   tko-100089-edge.evs.vs.local
+100.66.80.90   tko-100090-edge.evs.vs.local
+100.66.80.91   tko-100091-nsx.evs.vs.local
+100.66.80.92   tko-100092-nsx.evs.vs.local
+100.66.80.93   tko-100093-nsx.evs.vs.local
