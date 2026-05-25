@@ -453,6 +453,65 @@ aws ec2 create-tags --resources "$DOS_ID" \
 echo "DOS_ID=$DOS_ID"
 ```
 
+### Step F-alt — 已經有 Resolver IP?一條一條貼的版本
+
+CloudShell 開好後,**一個 code block = 一條指令**,依序貼:
+
+> Resolver Inbound IP 已知 — `100.66.146.33` / `100.66.175.116`,domain `evs.local`,NTP `169.254.169.123`。
+> 只要設好 `VPC_ID` 後面就可以照貼。
+
+#### 1. 設 EVS VPC ID
+
+```bash
+export VPC_ID=vpc-xxxxxxxx
+```
+
+#### 2. 建 DHCP Option Set(把 4 個值塞進去)
+
+```bash
+aws ec2 create-dhcp-options \
+  --dhcp-configurations \
+    "Key=domain-name-servers,Values=100.66.146.33,100.66.175.116" \
+    "Key=domain-name,Values=evs.local" \
+    "Key=ntp-servers,Values=169.254.169.123"
+```
+
+> 跑完會回一段 JSON,把裡面 `"DhcpOptionsId": "dopt-xxxxxxxx"` 那個值記下來,下面要用。
+
+#### 3. 把 DhcpOptionsId 設成變數(換成上一步拿到的 dopt-xxxxxxxx)
+
+```bash
+export DOS_ID=dopt-xxxxxxxx
+```
+
+#### 4. (選用)幫它打個 Name tag
+
+```bash
+aws ec2 create-tags --resources "$DOS_ID" --tags Key=Name,Value=evs-dhcp-options
+```
+
+#### 5. 把 Option Set 綁到 EVS VPC
+
+```bash
+aws ec2 associate-dhcp-options --dhcp-options-id "$DOS_ID" --vpc-id "$VPC_ID"
+```
+
+#### 6. 確認 VPC 已經改用這份 Option Set
+
+```bash
+aws ec2 describe-vpcs --vpc-ids "$VPC_ID" --query 'Vpcs[0].DhcpOptionsId' --output text
+```
+
+> 預期輸出 = 你剛剛 `DOS_ID` 那個 `dopt-xxxxxxxx`。
+
+#### 7. 確認 Option Set 內容是對的
+
+```bash
+aws ec2 describe-dhcp-options --dhcp-options-ids "$DOS_ID" --query 'DhcpOptions[0].DhcpConfigurations'
+```
+
+> 預期看到 4 個 entry: `domain-name-servers` = `100.66.146.33, 100.66.175.116`、`domain-name` = `evs.local`、`ntp-servers` = `169.254.169.123`。
+
 ### Step G — Associate 到 EVS VPC
 
 ```bash
