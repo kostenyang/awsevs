@@ -169,12 +169,30 @@ RV2_ID=$(aws route53 create-hosted-zone \
 echo "RV2_ID=$RV2_ID"
 ```
 
-> 已經建過 zone、CloudShell session 斷了想重跑後面 record 指令?從 Console 抓回 ID:
-> ```bash
-> FWD_ID=$(aws route53 list-hosted-zones --query "HostedZones[?Name=='evs.vs.local.'].Id|[0]" --output text); FWD_ID=${FWD_ID##*/}
-> RV1_ID=$(aws route53 list-hosted-zones --query "HostedZones[?Name=='0.66.100.in-addr.arpa.'].Id|[0]" --output text); RV1_ID=${RV1_ID##*/}
-> RV2_ID=$(aws route53 list-hosted-zones --query "HostedZones[?Name=='80.66.100.in-addr.arpa.'].Id|[0]" --output text); RV2_ID=${RV2_ID##*/}
-> ```
+### Step B' — 找不到 `FWD_ID` / `RV1_ID` / `RV2_ID`(CloudShell 斷線重來)
+
+Zone 已經建過了,但變數沒了 — 一條條貼,把三個 ID 救回來:
+
+```bash
+FWD_ID=$(aws route53 list-hosted-zones \
+  --query "HostedZones[?Name=='evs.vs.local.'].Id|[0]" --output text); FWD_ID=${FWD_ID##*/}
+echo "FWD_ID=$FWD_ID"
+```
+
+```bash
+RV1_ID=$(aws route53 list-hosted-zones \
+  --query "HostedZones[?Name=='0.66.100.in-addr.arpa.'].Id|[0]" --output text); RV1_ID=${RV1_ID##*/}
+echo "RV1_ID=$RV1_ID"
+```
+
+```bash
+RV2_ID=$(aws route53 list-hosted-zones \
+  --query "HostedZones[?Name=='80.66.100.in-addr.arpa.'].Id|[0]" --output text); RV2_ID=${RV2_ID##*/}
+echo "RV2_ID=$RV2_ID"
+```
+
+回 `None` 表示那個 zone 還沒建,回 Step B 補建那一個。
+也可以從 Console UI 抓:Route 53 → Hosted zones → 點 zone → 右上「Hosted zone ID」那欄複製,然後在 CloudShell `export FWD_ID=Z0XXX...`。
 
 ### Step C — Forward A records(13 筆,每筆一條獨立指令)
 
