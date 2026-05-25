@@ -37,6 +37,7 @@ Three ways, pick whichever fits:
 |---|---|---|
 | AWS CloudShell, batched | [CONSOLE.md §0](CONSOLE.md#§0--aws-cloudshell-一鍵跑) | Fast one-shot, paste a single block |
 | AWS CloudShell, one command per record | [CONSOLE.md §0B](CONSOLE.md#§0b--cloudshell-每筆-record-獨立指令) + [cloudshell-per-record.sh](cloudshell-per-record.sh) | Want to re-apply a single host, or read each line |
+| AWS CloudShell, Resolver Inbound + DHCP Option Set | [CONSOLE.md §0C](CONSOLE.md#§0c--cloudshell-建-resolver-inbound-endpoint--dhcp-option-set) + [cloudshell-resolver-dhcp.sh](cloudshell-resolver-dhcp.sh) | Hand DNS/NTP to EVS appliances via DHCP |
 | Route 53 Web UI | [CONSOLE.md §1](CONSOLE.md#§1--route-53-ui-一筆一筆建) | No CLI at all, prefer clicking through |
 | Local awscli script | [setup-evs-dns.sh](setup-evs-dns.sh) (see below) | Have awscli on your laptop |
 

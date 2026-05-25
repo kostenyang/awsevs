@@ -1,9 +1,10 @@
 # 用 AWS Console 設定 EVS DNS
 
-三條路:
+四條路:
 - **A. CloudShell 一鍵跑指令**(最快,~30 秒) — §0
 - **B. CloudShell 每筆 record 獨立指令**(可以只跑單筆) — §0B
-- **C. Route 53 UI 一筆一筆建** — §1 開始
+- **C. CloudShell 建 Resolver Inbound Endpoint + DHCP Option Set** — §0C
+- **D. Route 53 UI 一筆一筆建** — §1 開始
 
 > 前置(兩條路都要):記下 EVS 用的 **VPC ID** 和 **Region**。
 > 在 VPC console (`https://console.aws.amazon.com/vpc/`) → Your VPCs 找到 EVS 那一個,把 `vpc-xxxxxxxx` 抄起來。
@@ -343,6 +344,134 @@ aws route53 change-resource-record-sets --hosted-zone-id "$RV2_ID" --change-batc
 dig +short tko-100085-vc.evs.vs.local       # 預期: 100.66.80.85
 dig +short -x 100.66.80.85                  # 預期: tko-100085-vc.evs.vs.local.
 ```
+
+---
+
+## §0C — CloudShell 建 Resolver Inbound Endpoint + DHCP Option Set
+
+PHZ 預設只給 **附加到 PHZ 的 VPC 自己的 resolver** 用。EVS appliance(vCenter / NSX
+/ SDDC Manager…)在開機時要透過 DHCP 拿到 DNS server,還要走 link-local NTP,所以
+需要:
+
+1. **Route 53 Resolver Inbound Endpoint** — 給 EVS appliance 一組可路由的 DNS IP
+2. **DHCP Option Set** — 把 DNS IP + domain + NTP 塞給 DHCP client
+3. 把這個 Option Set **associate 到 EVS VPC**
+
+目標設定:
+
+| 欄位 | 值 |
+|---|---|
+| Domain name servers | Resolver Inbound Endpoint 給的 2 個 IP |
+| Domain name | `evs.local` |
+| NTP servers | `169.254.169.123` (AWS Time Sync, link-local) |
+
+完整檔案在 [`cloudshell-resolver-dhcp.sh`](cloudshell-resolver-dhcp.sh)。下面是 CloudShell 裡每段獨立貼的版本。
+
+### Step A — 設環境變數(必跑)
+
+```bash
+export VPC_ID=vpc-xxxxxxxx              # ← 改成 EVS 的 VPC ID
+export AWS_REGION=$AWS_DEFAULT_REGION
+```
+
+### Step B — 自動挑 2 個不同 AZ 的 subnet(Resolver Endpoint 需要)
+
+```bash
+read -r SUBNET_A SUBNET_B <<<"$(aws ec2 describe-subnets \
+  --filters "Name=vpc-id,Values=$VPC_ID" \
+  --query 'Subnets[].[SubnetId,AvailabilityZone]' --output text | \
+  awk '!seen[$2]++ {print $1}' | head -2 | tr '\n' ' ')"
+echo "SUBNET_A=$SUBNET_A  SUBNET_B=$SUBNET_B"
+```
+
+> 不滿意自動挑的?手動指定: `SUBNET_A=subnet-xxxx; SUBNET_B=subnet-yyyy`(必須在不同 AZ)。
+
+### Step C — 建 Security Group(只放行 VPC 內 53 進來)
+
+```bash
+VPC_CIDR=$(aws ec2 describe-vpcs --vpc-ids "$VPC_ID" \
+  --query 'Vpcs[0].CidrBlock' --output text)
+
+SG_ID=$(aws ec2 create-security-group \
+  --group-name evs-resolver-inbound \
+  --description "Route53 Resolver inbound for EVS" \
+  --vpc-id "$VPC_ID" --query 'GroupId' --output text)
+
+aws ec2 authorize-security-group-ingress --group-id "$SG_ID" \
+  --protocol udp --port 53 --cidr "$VPC_CIDR"
+aws ec2 authorize-security-group-ingress --group-id "$SG_ID" \
+  --protocol tcp --port 53 --cidr "$VPC_CIDR"
+echo "SG_ID=$SG_ID"
+```
+
+### Step D — 建 Resolver Inbound Endpoint
+
+```bash
+ENDPOINT_ID=$(aws route53resolver create-resolver-endpoint \
+  --creator-request-id "evs-inbound-$(date +%s)" \
+  --name evs-inbound \
+  --security-group-ids "$SG_ID" \
+  --direction INBOUND \
+  --ip-addresses SubnetId=$SUBNET_A SubnetId=$SUBNET_B \
+  --query 'ResolverEndpoint.Id' --output text)
+echo "ENDPOINT_ID=$ENDPOINT_ID  (約 2-5 分鐘變 OPERATIONAL)"
+```
+
+等到 OPERATIONAL(會自己 loop 到好):
+
+```bash
+while :; do
+  s=$(aws route53resolver get-resolver-endpoint --resolver-endpoint-id "$ENDPOINT_ID" \
+        --query 'ResolverEndpoint.Status' --output text)
+  echo "  status=$s"
+  [ "$s" = "OPERATIONAL" ] && break
+  sleep 15
+done
+```
+
+### Step E — 抓回 2 個 DNS IP(後面 DHCP Option Set 要用)
+
+```bash
+read -r DNS_IP1 DNS_IP2 <<<"$(aws route53resolver list-resolver-endpoint-ip-addresses \
+  --resolver-endpoint-id "$ENDPOINT_ID" \
+  --query 'IpAddresses[].Ip' --output text)"
+echo "DNS_IP1=$DNS_IP1  DNS_IP2=$DNS_IP2"
+```
+
+### Step F — 建 DHCP Option Set
+
+```bash
+DOS_ID=$(aws ec2 create-dhcp-options \
+  --dhcp-configurations \
+    "Key=domain-name-servers,Values=$DNS_IP1,$DNS_IP2" \
+    "Key=domain-name,Values=evs.local" \
+    "Key=ntp-servers,Values=169.254.169.123" \
+  --query 'DhcpOptions.DhcpOptionsId' --output text)
+
+aws ec2 create-tags --resources "$DOS_ID" \
+  --tags Key=Name,Value=evs-dhcp-options
+echo "DOS_ID=$DOS_ID"
+```
+
+### Step G — Associate 到 EVS VPC
+
+```bash
+aws ec2 associate-dhcp-options --dhcp-options-id "$DOS_ID" --vpc-id "$VPC_ID"
+```
+
+### Step H — 確認
+
+```bash
+aws ec2 describe-vpcs --vpc-ids "$VPC_ID" \
+  --query 'Vpcs[0].DhcpOptionsId' --output text   # 應該等於上面的 DOS_ID
+
+aws ec2 describe-dhcp-options --dhcp-options-ids "$DOS_ID" \
+  --query 'DhcpOptions[0].DhcpConfigurations'
+```
+
+> ⚠️ **已開機的 EC2 / EVS appliance 不會自動套用新 DHCP options**。
+> 要 renew DHCP lease(Linux: `sudo dhclient -r && sudo dhclient`、Windows: `ipconfig /release && ipconfig /renew`)或直接重開機才會生效。
+> 全新部署的 EVS 在 provisioning 階段拿,所以走 DHCP option set 沒問題。
 
 ---
 
