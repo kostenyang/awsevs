@@ -10,7 +10,7 @@
 
 # §1 ── 環境變數(必跑)─────────────────────────────────────────────────
 export VPC_ID=vpc-08464602dd04513f0       # EVS lab VPC
-export AWS_REGION=$AWS_DEFAULT_REGION
+export AWS_REGION=ap-northeast-1          # EVS lab region (Tokyo)
 
 # §2 ── 自動挑 2 個不同 AZ 的 subnet ────────────────────────────────────
 read -r SUBNET_A SUBNET_B <<<"$(aws ec2 describe-subnets \

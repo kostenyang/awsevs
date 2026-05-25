@@ -3,6 +3,14 @@
 Forward + reverse DNS records for an AWS Elastic VMware Service (EVS) SDDC,
 delivered as Route 53 **Private Hosted Zones** attached to the EVS VPC.
 
+> **Lab pinned values** (used throughout — change in scripts if you re-deploy):
+> - Region: `ap-northeast-1` (Tokyo)
+> - VPC: `vpc-08464602dd04513f0`
+> - Forward PHZ: `evs.vs.local` → `Z056691012KJA8U1Y5UAU`
+> - Resolver Inbound IPs: `100.66.146.33`, `100.66.175.116`
+> - DHCP domain-name: `evs.local` (note: differs from PHZ name by design)
+> - NTP: `169.254.169.123` (AWS Time Sync, link-local)
+
 ## Zones
 
 | Purpose | Zone | Covers |

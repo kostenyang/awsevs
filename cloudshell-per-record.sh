@@ -12,7 +12,7 @@
 
 # §0 ── 設定環境變數(必跑)────────────────────────────────────────────
 export VPC_ID=vpc-08464602dd04513f0        # EVS lab VPC
-export AWS_REGION=$AWS_DEFAULT_REGION      # CloudShell 自帶
+export AWS_REGION=ap-northeast-1           # EVS lab region (Tokyo)
 
 
 # §1 ── 建 3 個 Private Hosted Zone(必跑,只要跑一次)──────────────────

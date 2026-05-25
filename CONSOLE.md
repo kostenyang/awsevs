@@ -16,14 +16,15 @@
 **CloudShell** 就是 Console 右上角那個 `>_` 圖示(在 region 選單左邊那一排小 icon 裡)。
 點開會跳出一個瀏覽器內的 terminal,已經登入你的 AWS 身份,`aws` / `jq` / `git` 都裝好了。
 
-> ⚠️ CloudShell 是 **per-region** 的。先在 Console 右上角把 region 切到 EVS 所在的 region,再打開 CloudShell,跑出來的指令才會打到對的 region。
+> ⚠️ CloudShell 是 **per-region** 的。本 lab 的 EVS 建在 **`ap-northeast-1` (Tokyo)** — 開 CloudShell 前先把 Console 右上角切到 ap-northeast-1。
+> (Resolver、PHZ、DHCP Option Set 全部都已建在這個 region,跑指令一定要在這裡。)
 
 打開 CloudShell 後,把這整段貼進去執行:
 
 ```bash
 # 1) 設好 EVS VPC ID(改成你自己的)
 export VPC_ID=vpc-08464602dd04513f0
-export AWS_REGION=$AWS_DEFAULT_REGION   # CloudShell 自帶,等於你 Console 當前 region
+export AWS_REGION=ap-northeast-1        # EVS lab region (Tokyo)
 
 # 2) 抓腳本下來跑(repo 推上去之後才能這樣抓)
 git clone https://github.com/kostenyang/awsevs.git
@@ -35,7 +36,7 @@ cd awsevs
 
 ```bash
 export VPC_ID=vpc-08464602dd04513f0
-export AWS_REGION=$AWS_DEFAULT_REGION
+export AWS_REGION=ap-northeast-1
 
 # 建 forward zone
 FWD_ID=$(aws route53 create-hosted-zone \
@@ -131,7 +132,7 @@ echo "Done. FWD=$FWD_ID  RV1=$RV1_ID  RV2=$RV2_ID"
 
 ```bash
 export VPC_ID=vpc-08464602dd04513f0              # EVS lab VPC
-export AWS_REGION=$AWS_DEFAULT_REGION   # CloudShell 自帶,等於當前 region
+export AWS_REGION=ap-northeast-1        # EVS lab region (Tokyo)
 ```
 
 ### Step B — 建 3 個 Private Hosted Zone(必跑,只跑一次)
@@ -398,7 +399,7 @@ PHZ 預設只給 **附加到 PHZ 的 VPC 自己的 resolver** 用。EVS applianc
 
 ```bash
 export VPC_ID=vpc-08464602dd04513f0
-export AWS_REGION=$AWS_DEFAULT_REGION
+export AWS_REGION=ap-northeast-1
 ```
 
 ### Step B — 自動挑 2 個不同 AZ 的 subnet(Resolver Endpoint 需要)
