@@ -29,7 +29,22 @@ delivered as Route 53 **Private Hosted Zones** attached to the EVS VPC.
 | tko-100092-nsx.evs.vs.local | 100.66.80.92 | NSX Manager |
 | tko-100093-nsx.evs.vs.local | 100.66.80.93 | NSX Manager |
 
-## Apply
+## Apply via AWS CloudShell (one command per record)
+
+If you'd rather paste one independent command per DNS record (so you can run
+just a single host or selectively re-apply), use
+[cloudshell-per-record.sh](cloudshell-per-record.sh). It's organized into:
+
+- §0 env vars (`VPC_ID`, `AWS_REGION`)
+- §1 three `create-hosted-zone` calls (forward + 2 reverse PHZs)
+- §2 thirteen independent A-record `change-resource-record-sets` calls
+- §3 thirteen independent PTR-record calls
+- §4 `dig` verification snippets
+
+Open AWS Console → switch to the EVS region → click the `>_` (CloudShell) icon
+→ paste section by section, or paste the whole file at once.
+
+## Apply via local awscli (batched)
 
 Pre-reqs: `awscli v2`, `jq`, AWS credentials with Route 53 + EC2 read perms,
 and the EVS VPC id.
