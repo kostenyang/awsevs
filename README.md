@@ -7,6 +7,9 @@ delivered as Route 53 **Private Hosted Zones** attached to the EVS VPC.
 > - Region: `ap-northeast-1` (Tokyo)
 > - VPC: `vpc-08464602dd04513f0`
 > - Forward PHZ: `evs.vs.local` → `Z056691012KJA8U1Y5UAU`
+> - Reverse PHZ (100.66.0/24): `0.66.100.in-addr.arpa` → _TBD_
+> - Reverse PHZ (100.66.80/24): `80.66.100.in-addr.arpa` → _TBD_
+> - Resolver Inbound Endpoint: `rslvr-in-453878b189554817a`
 > - Resolver Inbound IPs: `100.66.146.33`, `100.66.175.116`
 > - DHCP domain-name: `evs.local` (note: differs from PHZ name by design)
 > - NTP: `169.254.169.123` (AWS Time Sync, link-local)
